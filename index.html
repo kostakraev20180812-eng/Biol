@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Моя игра — Биология 5 класс</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#fff;background:radial-gradient(circle at 50% 0,#176b87,#061523 65%);min-height:100vh}
+.screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}.panel{width:min(760px,100%);background:#061827ee;border:2px solid #36b9dc;border-radius:26px;padding:42px 24px;text-align:center;box-shadow:0 20px 70px #0009}
+h1{font-size:clamp(42px,9vw,76px);margin:0;color:#8deeff;text-shadow:0 0 25px #1686a5}h2{font-size:30px}.intro{opacity:.85;font-size:18px;line-height:1.5}.btn{border:0;border-radius:13px;padding:15px 28px;font-size:18px;font-weight:bold;cursor:pointer;margin:7px}.start{background:#16c98b;color:white;font-size:23px;padding:18px 48px}.secondary{background:#ddd;color:#123}
+.hidden{display:none!important}.game{max-width:1100px;margin:auto;padding:15px 10px}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.title{font-weight:bold;color:#8deeff;font-size:22px}.score,.timer{background:#06283b;border-radius:12px;padding:9px 14px;font-weight:bold}.timer{color:#ffe08a}.board{display:grid;grid-template-columns:1.25fr repeat(5,1fr);gap:5px;background:#03131d;padding:6px;border-radius:16px}.cell{min-height:72px;border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;padding:6px;font-weight:bold}.head{background:#07536d;font-size:14px}.points{background:#087fa1;font-size:22px;cursor:pointer;transition:.15s}.points:hover{background:#13a8ce;transform:scale(1.03)}.used{background:#29434d;color:#708991;font-size:22px}
+.modal{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;padding:15px;z-index:10}.card{background:#f4fbff;color:#102631;width:min(700px,100%);border-radius:22px;padding:28px;text-align:center}.card h2{font-size:clamp(22px,5vw,34px);margin:5px 0 16px}.answer{min-height:55px;font-size:20px;margin:15px}.show{background:#087fa1;color:white}.right{background:#14b77d;color:white}.wrong{background:#ddd}.finish h1{font-size:50px}.final{font-size:45px;color:#24d99b;margin:20px}
+@media(max-width:650px){.game{padding:8px 3px}.board{gap:3px;padding:3px}.cell{min-height:58px;font-size:11px}.head{font-size:9px}.points,.used{font-size:16px}.title{font-size:16px}.score,.timer{font-size:14px;padding:7px}}
+</style>
+</head>
+<body>
+<section id="start" class="screen"><div class="panel">
+<h1>МОЯ ИГРА</h1><h2>🧬 Биология · 5 класс</h2>
+<p class="intro">25 вопросов • 5 тем • 100–500 очков<br>Выбирай клетку, отвечай и набирай максимум!</p>
+<button class="btn start" onclick="startGame()">▶ НАЧАТЬ ИГРУ</button>
+</div></section>
+
+<section id="game" class="game hidden">
+<div class="top"><div class="title">🧬 БИОЛОГИЯ 5 КЛАСС</div><div class="timer">⏱ <span id="time">30</span></div><div class="score">🏆 <span id="score">0</span></div></div>
+<div class="board" id="board"></div>
+</section>
+
+<div id="modal" class="modal"><div class="card">
+<h2 id="question"></h2><div class="answer" id="answer">У тебя есть 30 секунд. Подумай!</div>
+<button class="btn show" onclick="showAnswer()">Показать ответ</button>
+<div id="actions" class="hidden"><button class="btn right" onclick="finishQ(true)">✓ Правильно</button><button class="btn wrong" onclick="finishQ(false)">✕ Ошибка</button></div>
+</div></div>
+
+<section id="finish" class="screen hidden"><div class="panel">
+<h1>🏆 ПОБЕДА!</h1><p>Ты прошёл все вопросы.</p><div class="final"><span id="finalScore">0</span> очков</div>
+<button class="btn start" onclick="location.reload()">↻ ИГРАТЬ ЕЩЁ РАЗ</button>
+</div></section>
+
+<script>
+const topics=[
+["Клетка",[["Что является основной единицей строения живых организмов?",100,"Клетка."],["Какая часть клетки управляет её жизнедеятельностью?",200,"Ядро."],["Что находится внутри клетки между органоидами?",300,"Цитоплазма."],["Какая структура отделяет клетку от внешней среды?",400,"Клеточная мембрана."],["Какой органоид растительной клетки содержит хлорофилл?",500,"Хлоропласт."]]],
+["Растения",[["Какой орган растения поглощает воду и минеральные вещества?",100,"Корень."],["Как называется зелёный орган растения, в котором происходит фотосинтез?",200,"Лист."],["Как называется процесс образования органических веществ на свету?",300,"Фотосинтез."],["Какой орган растения участвует в образовании семян?",400,"Цветок."],["Что защищает семена у покрытосеменных растений?",500,"Плод."]]],
+["Животные",[["Сколько ног у большинства взрослых насекомых?",100,"Шесть."],["К какой большой группе относятся рыбы?",200,"К позвоночным животным."],["Как называются животные, которые питаются растениями?",300,"Растительноядные."],["Как называется наука о животных?",400,"Зоология."],["Назови два признака млекопитающих.",500,"Они выкармливают детёнышей молоком и имеют волосяной покров."]]],
+["Человек",[["Какой орган перекачивает кровь по организму?",100,"Сердце."],["Какие органы обеспечивают дыхание?",200,"Лёгкие."],["Сколько основных органов чувств обычно выделяют?",300,"Пять."],["Какой орган является самым большим органом человека?",400,"Кожа."],["Какая система органов переваривает пищу?",500,"Пищеварительная система."]]],
+["Природа",[["Что такое среда обитания?",100,"Место и условия, в которых живёт организм."],["Назови пример неживой природы.",200,"Вода, воздух, камень или солнечный свет."],["Что такое цепь питания?",300,"Последовательность организмов, где каждый следующий получает пищу от предыдущего."],["Что нужно растению для фотосинтеза?",400,"Свет, вода и углекислый газ."],["Почему растения важны для экосистем?",500,"Они создают органические вещества и выделяют кислород при фотосинтезе."]]]
+];
+let score=0,used=new Set(),current=null,timer=null;
+
+function startGame(){document.getElementById('start').classList.add('hidden');document.getElementById('game').classList.remove('hidden');draw()}
+function draw(){let b=document.getElementById('board');b.innerHTML='';let e=document.createElement('div');e.className='cell head';e.textContent='Тема / Очки';b.appendChild(e);
+topics.forEach(t=>{e=document.createElement('div');e.className='cell head';e.textContent=t[0];b.appendChild(e)});
+for(let r=0;r<5;r++){e=document.createElement('div');e.className='cell head';e.textContent=(r+1)+' уровень';b.appendChild(e);topics.forEach((t,c)=>{let key=c+'-'+r;e=document.createElement('div');e.className='cell '+(used.has(key)?'used':'points');e.textContent=used.has(key)?'✓':t[1][r][1];if(!used.has(key))e.onclick=()=>openQ(c,r,key);b.appendChild(e)})}}
+function openQ(c,r,key){used.add(key);current=topics[c][1][r];document.getElementById('question').textContent=current[0];document.getElementById('answer').textContent='У тебя есть 30 секунд. Подумай!';document.getElementById('actions').classList.add('hidden');document.getElementById('modal').style.display='flex';draw();let n=30;document.getElementById('time').textContent=n;clearInterval(timer);timer=setInterval(()=>{n--;document.getElementById('time').textContent=n;if(n<=0){clearInterval(timer);showAnswer()}},1000)}
+function showAnswer(){clearInterval(timer);document.getElementById('answer').textContent='Правильный ответ: '+current[2];document.getElementById('actions').classList.remove('hidden')}
+function finishQ(ok){if(ok){score+=current[1];document.getElementById('score').textContent=score}document.getElementById('modal').style.display='none';if(used.size===25){document.getElementById('game').classList.add('hidden');document.getElementById('finalScore').textContent=score;document.getElementById('finish').classList.remove('hidden')}}
+</script>
+</body></html>
